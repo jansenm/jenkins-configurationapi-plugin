@@ -94,6 +94,10 @@ Permissions needed
 ------------------
 The plugin is not yet guarded by permissions. Jenkins.ADMINISTER should be enough.
 
+Unit Tests needed
+-----------------
+As a newbie to jenkins, groovy, gradle and the whole java world i need some input here :)
+
 
 .. _ExtensionPoints: http://javadoc.jenkins-ci.org/hudson/ExtensionPoint.html
 .. _core.ConfigurationStream: src/main/groovy/org/jenkinsci/plugins/configurationapi/core/ConfigurationStream.groovy
