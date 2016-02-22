@@ -170,18 +170,22 @@ public class ConfigurationImport extends CLICommand
         return rc
     }
 
-    private Map importPluginConfiguration(Jenkins jenkins, PluginWrapper plugin)
+    private Map importPluginConfigurations(Jenkins jenkins, Map configuration)
     {
-        // Look for an extension that knows how to import the plugin
-        PluginConfigurationStream stream = jenkins.getExtensionList(PluginConfigurationStream).find {
-            plugin.getShortName() == it.getPluginId()
+        def extensionList = jenkins.getExtensionList(PluginConfigurationStream)
+
+        configuration.each { String pluginId, Map pluginConfig ->
+
+            // Look for an extension that knows how to export the plugin
+            def stream = extensionList.find { pluginId == it.getPluginId() }
+            if (stream == null)
+            {
+                stderr.println("Unsupported plugin ${pluginId} found!")
+                return
+            }
+
+            stream.doImport(jenkins, (Map)pluginConfig['configuration'])
         }
-        if (stream == null)
-        {
-            stderr.println("Unsupported plugin ${plugin.getShortName()} found!")
-            return null
-        }
-        return stream.doExport(jenkins, plugin)
     }
 
     @Override
@@ -229,6 +233,7 @@ public class ConfigurationImport extends CLICommand
         // Import the global plugin configurations
         // =======================================
         //
+        importPluginConfigurations(jenkins, (Map)config['plugins'])
 
         //
         // Import the global node configuration
