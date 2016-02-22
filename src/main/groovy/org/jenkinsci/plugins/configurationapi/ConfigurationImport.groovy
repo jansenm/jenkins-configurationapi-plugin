@@ -2,19 +2,17 @@ package org.jenkinsci.plugins.configurationapi
 
 import groovy.json.JsonSlurper
 import hudson.Extension
-import hudson.PluginManager
 import hudson.PluginWrapper
 import hudson.cli.CLICommand
 import hudson.cli.util.ScriptLoader
 import hudson.slaves.NodeProperty
 import hudson.slaves.NodePropertyDescriptor
 import hudson.util.DescribableList
-import hudson.util.VersionNumber
 import jenkins.model.Jenkins
 import org.apache.commons.io.IOUtils
-import org.jenkinsci.plugins.configurationapi.core.ConfigurationStream as CoreConfigurationStream
-import org.jenkinsci.plugins.configurationapi.node.ConfigurationStream as NodeConfigurationStream
-import org.jenkinsci.plugins.configurationapi.plugin.ConfigurationStream as PluginConfigurationStream
+import org.jenkinsci.plugins.configurationapi.core.CoreConfigurationStream
+import org.jenkinsci.plugins.configurationapi.node.NodeConfigurationStream
+import org.jenkinsci.plugins.configurationapi.plugin.PluginConfigurationStream
 import org.kohsuke.args4j.Argument
 import org.kohsuke.args4j.CmdLineException
 

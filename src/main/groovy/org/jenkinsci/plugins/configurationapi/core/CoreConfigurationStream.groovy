@@ -3,7 +3,7 @@ package org.jenkinsci.plugins.configurationapi.core
 import hudson.ExtensionPoint
 import jenkins.model.Jenkins
 
-abstract class ConfigurationStream implements ExtensionPoint
+interface CoreConfigurationStream extends ExtensionPoint
 {
     public abstract String getId()
 

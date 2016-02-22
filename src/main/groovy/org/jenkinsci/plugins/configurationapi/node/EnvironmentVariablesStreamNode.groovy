@@ -7,7 +7,7 @@ import hudson.slaves.NodeProperty
 import jenkins.model.Jenkins
 
 @Extension
-class EnvironmentVariablesStream extends ConfigurationStream
+class EnvironmentVariablesStreamNode implements NodeConfigurationStream
 {
 
     @Override

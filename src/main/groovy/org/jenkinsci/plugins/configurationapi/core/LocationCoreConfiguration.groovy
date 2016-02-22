@@ -5,7 +5,7 @@ import jenkins.model.Jenkins
 import jenkins.model.JenkinsLocationConfiguration
 
 @Extension
-class LocationConfiguration extends ConfigurationStream
+class LocationCoreConfiguration implements CoreConfigurationStream
 {
     @Override
     void doImport(Jenkins instance, Map configuration)

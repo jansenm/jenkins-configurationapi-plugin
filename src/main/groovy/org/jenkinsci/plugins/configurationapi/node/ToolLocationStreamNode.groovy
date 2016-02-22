@@ -8,7 +8,7 @@ import hudson.tools.ToolLocationNodeProperty
 import jenkins.model.Jenkins
 
 @Extension
-class ToolLocationStream extends ConfigurationStream
+class ToolLocationStreamNode implements NodeConfigurationStream
 {
 
     @Override

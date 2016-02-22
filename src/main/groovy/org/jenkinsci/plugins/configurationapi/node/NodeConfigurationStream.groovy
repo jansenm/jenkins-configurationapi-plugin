@@ -5,7 +5,7 @@ import hudson.model.Node
 import hudson.slaves.NodeProperty
 import jenkins.model.Jenkins
 
-abstract class ConfigurationStream implements ExtensionPoint
+interface NodeConfigurationStream extends ExtensionPoint
 {
     public abstract String getNodePropertyClass()
 

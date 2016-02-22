@@ -8,7 +8,7 @@ import org.apache.commons.lang.NotImplementedException
 import org.jenkinsci.plugins.envinject.EnvInjectNodeProperty
 
 @Extension
-class EnvInjectStream extends ConfigurationStream
+class EnvInjectStreamNode implements NodeConfigurationStream
 {
     @Override
     void doImport(Jenkins instance, Node node, Map configuration)

@@ -7,7 +7,7 @@ import hudson.slaves.NodeProperty
 import jenkins.model.Jenkins
 
 @Extension
-class ZenTimeStampStream extends ConfigurationStream
+class ZenTimeStampStreamNode implements NodeConfigurationStream
 {
     @Override
     String getNodePropertyClass()

@@ -4,7 +4,7 @@ import hudson.ExtensionPoint
 import hudson.PluginWrapper
 import jenkins.model.Jenkins
 
-abstract class ConfigurationStream implements ExtensionPoint
+interface PluginConfigurationStream extends ExtensionPoint
 {
     public abstract String getPluginId()
 

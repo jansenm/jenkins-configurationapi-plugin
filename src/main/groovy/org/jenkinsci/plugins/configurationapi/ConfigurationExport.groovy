@@ -8,9 +8,9 @@ import hudson.slaves.NodeProperty
 import hudson.slaves.NodePropertyDescriptor
 import hudson.util.DescribableList
 import jenkins.model.Jenkins
-import org.jenkinsci.plugins.configurationapi.core.ConfigurationStream as CoreConfigurationStream
-import org.jenkinsci.plugins.configurationapi.node.ConfigurationStream as NodeConfigurationStream
-import org.jenkinsci.plugins.configurationapi.plugin.ConfigurationStream as PluginConfigurationStream
+import org.jenkinsci.plugins.configurationapi.core.CoreConfigurationStream
+import org.jenkinsci.plugins.configurationapi.node.NodeConfigurationStream
+import org.jenkinsci.plugins.configurationapi.plugin.PluginConfigurationStream
 import org.kohsuke.args4j.Argument
 
 import java.util.logging.Logger
@@ -54,7 +54,7 @@ public class ConfigurationExport extends CLICommand
     {
         def rc = [:]
         // Look for an extension that knows how to export the plugin
-        jenkins.getExtensionList(org.jenkinsci.plugins.configurationapi.core.ConfigurationStream).each { stream ->
+        jenkins.getExtensionList(CoreConfigurationStream).each { stream ->
             rc[stream.getId()] = stream.doExport(jenkins)
         }
         return rc
@@ -66,11 +66,11 @@ public class ConfigurationExport extends CLICommand
     {
 
         def rc = [:]
-        def extensions = jenkins.getExtensionList(org.jenkinsci.plugins.configurationapi.node.ConfigurationStream)
+        def extensions = jenkins.getExtensionList(NodeConfigurationStream)
         for (nodeProperty in properties)
         {
             // Look for an extension that knows how to export the plugin
-            org.jenkinsci.plugins.configurationapi.node.ConfigurationStream stream = extensions.find {
+            def stream = extensions.find {
                 nodeProperty.getClass().getName() == it.getNodePropertyClass()
             }
             // Determine that success
@@ -99,7 +99,7 @@ public class ConfigurationExport extends CLICommand
     private Map exportPluginConfiguration(Jenkins jenkins, PluginWrapper plugin)
     {
         // Look for an extension that knows how to export the plugin
-        PluginConfigurationStream stream = jenkins.getExtensionList(PluginConfigurationStream).find {
+        def stream = jenkins.getExtensionList(PluginConfigurationStream).find {
             plugin.getShortName() == it.getPluginId()
         }
         if (stream == null)

@@ -5,7 +5,7 @@ import hudson.PluginWrapper
 import jenkins.model.Jenkins
 
 @Extension
-class ZenTimeStamp extends ConfigurationStream
+class ZenTimeStamp implements PluginConfigurationStream
 {
 
     @Override
@@ -19,7 +19,7 @@ class ZenTimeStamp extends ConfigurationStream
     {
         def rc = [:]
         hudson.tasks.Mailer.DescriptorImpl htm =
-                instance.getDescriptor('hudson.tasks.MailerStream')
+                instance.getDescriptor('hudson.tasks.MailerStreamPlugin')
         if (htm == null) {
             return rc
         }
