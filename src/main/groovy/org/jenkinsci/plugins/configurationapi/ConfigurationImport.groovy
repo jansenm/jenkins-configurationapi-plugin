@@ -5,6 +5,9 @@ import hudson.Extension
 import hudson.PluginWrapper
 import hudson.cli.CLICommand
 import hudson.cli.util.ScriptLoader
+import hudson.slaves.NodeProperty
+import hudson.slaves.NodePropertyDescriptor
+import hudson.util.DescribableList
 import jenkins.model.Jenkins
 import org.apache.commons.io.IOUtils
 import org.kohsuke.args4j.Argument
@@ -74,10 +77,23 @@ public class ConfigurationImport extends CLICommand
         }
     }
 
-    private Map importNodeConfigurations(Jenkins jenkins, Map configuration)
+    private Map importNodeConfiguration(
+            Jenkins jenkins,
+            DescribableList<NodeProperty<?>, NodePropertyDescriptor> nodeProperties,
+            Map configuration)
     {
         def coreExtensions = jenkins.getExtensionList(NodeConfigurationStream)
-        configuration.each { String nodeName, nodeConfig ->
+        // :TODO: Setup a node if necessary
+        configuration.each { nodePropertyName, nodePropertyConfig ->
+            // :TODO: error handling for no stream found
+            NodeConfigurationStream stream = coreExtensions.find { nodePropertyName == it.getNodePropertyClass() }
+            stream.doImport(jenkins, nodeProperties, nodePropertyConfig.configuration)
+        }
+    }
+
+    private Map importNodeConfigurations(Jenkins jenkins, Map configuration)
+    {
+        configuration.each { String nodeName, Map nodeConfig ->
             def nodeProperties
             if (nodeName == 'master')
             {
@@ -88,11 +104,7 @@ public class ConfigurationImport extends CLICommand
                 nodeProperties = jenkins.getNode(nodeName).getNodeProperties()
             }
             // :TODO: Setup a node if necessary
-            nodeConfig.each { nodePropertyName, nodePropertyConfig ->
-                // :TODO: error handling for no stream found
-                NodeConfigurationStream stream = coreExtensions.find { nodePropertyName == it.getNodePropertyClass() }
-                stream.doImport(jenkins, nodeProperties, nodePropertyConfig.configuration)
-            }
+            importNodeConfiguration(jenkins, nodeProperties, nodeConfig)
         }
     }
 
@@ -116,7 +128,7 @@ public class ConfigurationImport extends CLICommand
         def final PLUGINS_MISSING = 3
 
         def rc = IDENTICAL
-        config.each { pluginId, pluginConfig ->
+        config.each { String pluginId, Map pluginConfig ->
 
             // Check if the plugin is installed
             def currentInstallation = pluginManager.getPlugin(pluginId)
@@ -193,13 +205,13 @@ public class ConfigurationImport extends CLICommand
         // Import the jenkins core configuration
         // =====================================
         //
-        importCoreConfiguration(jenkins, config['core'])
+        importCoreConfiguration(jenkins, (Map)config['core'])
 
         //
         // Setup the plugins
         // =================
         //
-        def rc = setupPlugins(jenkins, config['plugins'])
+        def rc = setupPlugins(jenkins, (Map)config['plugins'])
         switch (rc)
         {
             case 3:
@@ -222,12 +234,13 @@ public class ConfigurationImport extends CLICommand
         // Import the global node configuration
         // ====================================
         //
+        importNodeConfiguration(jenkins, jenkins.getGlobalNodeProperties(), (Map)config['global_nodes'])
 
         //
         // Import the node configurations
         // ==============================
         //
-        importNodeConfigurations(jenkins, config['nodes'])
+        importNodeConfigurations(jenkins, (Map) config['nodes'])
 
         jenkins.save()
 

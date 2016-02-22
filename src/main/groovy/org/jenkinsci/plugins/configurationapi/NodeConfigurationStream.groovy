@@ -12,6 +12,8 @@ interface NodeConfigurationStream extends ExtensionPoint
 
     public Map doExport(Jenkins instance, NodeProperty nodeProperty)
 
-    public void doImport(Jenkins instance, DescribableList<NodeProperty<?>, NodePropertyDescriptor> node, Map
-            configuration)
+    public void doImport(
+            Jenkins jenkins,
+            DescribableList<NodeProperty<?>, NodePropertyDescriptor> nodeProperties,
+            Map configuration)
 }
