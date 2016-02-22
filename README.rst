@@ -85,6 +85,12 @@ Move Plugin Related Code Into Plugins
 After the design has been hammered out the best solution is to move the plugin related ConfigurationStream into the
 respective plugins. But for this to happen the design needs to be really stabled.
 
+ExtensionPoints Design
+----------------------
+Perhaps its better to make the plugin/core extension points a combination out of global/node based configuration. This
+could simplify the implementation.
+
+
 .. _ExtensionPoints: http://javadoc.jenkins-ci.org/hudson/ExtensionPoint.html
 .. _core.ConfigurationStream: src/main/groovy/org/jenkinsci/plugins/configurationapi/core/ConfigurationStream.groovy
 .. _plugin.ConfigurationStream: src/main/groovy/org/jenkinsci/plugins/configurationapi/core/ConfigurationStream.groovy
