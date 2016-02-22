@@ -1,13 +1,15 @@
 package org.jenkinsci.plugins.configurationapi
 
-import groovy.json.JsonOutput
+import groovy.json.JsonSlurper
 import hudson.Extension
+import hudson.PluginManager
 import hudson.PluginWrapper
 import hudson.cli.CLICommand
 import hudson.cli.util.ScriptLoader
 import hudson.slaves.NodeProperty
 import hudson.slaves.NodePropertyDescriptor
 import hudson.util.DescribableList
+import hudson.util.VersionNumber
 import jenkins.model.Jenkins
 import org.apache.commons.io.IOUtils
 import org.jenkinsci.plugins.configurationapi.core.ConfigurationStream as CoreConfigurationStream
@@ -22,9 +24,9 @@ import java.util.logging.Logger
 public class ConfigurationImport extends CLICommand
 {
     @Argument(
-            usage="Script to be executed. File, URL or '=' to represent stdin.",
-            metaVar="SCRIPT",
-            index=0)
+            usage = "Script to be executed. File, URL or '=' to represent stdin.",
+            metaVar = "SCRIPT",
+            index = 0)
     public String script;
 
     @Argument(
@@ -32,11 +34,12 @@ public class ConfigurationImport extends CLICommand
             metaVar = "PASSWORD",
             required = false,
             multiValued = false,
-            index=1)
+            index = 1)
     private String password = null
 
-    private String loadConfiguration() throws CmdLineException, IOException, InterruptedException {
-        if(script==null)
+    private String loadConfiguration() throws CmdLineException, IOException, InterruptedException
+    {
+        if (script == null)
             throw new CmdLineException(null, "No script is specified");
         if (script.equals("="))
             return IOUtils.toString(stdin);
@@ -69,14 +72,14 @@ public class ConfigurationImport extends CLICommand
         }
     }
 
-    private Map importCoreConfiguration(Jenkins jenkins)
+    private void importCoreConfiguration(Jenkins jenkins, Map config)
     {
-        def rc = [:]
-        // Look for an extension that knows how to import the plugin
-        jenkins.getExtensionList(CoreConfigurationStream).each { stream ->
-            rc[stream.getId()] = stream.doExport(jenkins)
+        def coreExtensions = jenkins.getExtensionList(CoreConfigurationStream)
+        for (entry in config)
+        {
+            CoreConfigurationStream stream = coreExtensions.find { entry.key == it.getId() }
+            stream.doImport(jenkins, entry.value)
         }
-        return rc
     }
 
     private Map importNodeConfiguration(
@@ -115,6 +118,68 @@ public class ConfigurationImport extends CLICommand
         return rc
     }
 
+    private int setupPlugins(Jenkins jenkins, Map config)
+    {
+        // Initially i though i could download and install the exact same set of plugins as given in the
+        // configuration. This apparently is not THAT easy given jenkins by default does not have a method to install
+        // a plugin in a given (older) version. It has to be done manually.
+        //
+        // So i need to find out a way to do it myself.
+        // A)
+        //      - download the jpi/hpi plugin manually (works only for jenkins-ci.com plugins afaics [EASY]
+        //      - install that plugin [NO IDEA YET]
+        // B)
+        //      For me the solution is simple. I use my ansible playbook which can install a set of plugins in a
+        //      fixed version. So for now just verify the plugins and give feedback
+        //
+        def pluginManager = jenkins.getPluginManager()
+        def final IDENTICAL = 1
+        def final VERSION_MISMATCH = 2
+        def final PLUGINS_MISSING = 3
+
+        def rc = IDENTICAL
+        config.each { pluginId, pluginConfig ->
+
+            // Check if the plugin is installed
+            def currentInstallation = pluginManager.getPlugin(pluginId)
+            if (currentInstallation)
+            {
+                // The plugin is installed. Check if its the correct version
+                if (currentInstallation.getVersion() == pluginConfig['version'])
+                {
+                    stderr.println("Plugin ${pluginId} is installed with the correct version ${pluginConfig.version}.")
+                }
+                else
+                {
+                    stderr.println("Plugin ${pluginId} is installed with the wrong version\
+                                    ${currentInstallation.getVersion()} (configured ${pluginConfig.version})")
+                    rc = [VERSION_MISMATCH, rc].max()
+                }
+
+                if (pluginConfig.get('enabled', true))
+                {
+                    if (!currentInstallation.isEnabled())
+                    {
+                        currentInstallation.enable()
+                    }
+                }
+                else if (currentInstallation.isEnabled())
+                {
+                    currentInstallation.disable()
+                }
+            }
+            else
+            {
+                stderr.println("Plugin ${pluginId} is NOT INSTALLED.")
+                rc = [PLUGINS_MISSING, rc].max()
+            }
+
+        }
+
+        // Give back the status
+        return rc
+    }
+
     private Map importPluginConfiguration(Jenkins jenkins, PluginWrapper plugin)
     {
         // Look for an extension that knows how to import the plugin
@@ -143,83 +208,49 @@ public class ConfigurationImport extends CLICommand
         //
         // Load the configuration
         //
-        String config = loadConfiguration()
-        println(config)
-        return 0
+        def json = new JsonSlurper()
+        def config = (Map) json.parseText(loadConfiguration())
 
         //
-        // Export the jenkins core configuration
+        // Import the jenkins core configuration
         // =====================================
         //
-        def core = [:]
-        for (coreConfig in jenkins.getExtensionList(CoreConfigurationStream))
+        importCoreConfiguration(jenkins, config['core'])
+
+        //
+        // Setup the plugins
+        // =================
+        //
+        def rc = setupPlugins(jenkins, config['plugins'])
+        switch (rc)
         {
-            core[coreConfig.getId()] = importCoreConfiguration(jenkins)
+            case 3:
+                stderr.println('error: the plugins are not configured correctly (check above). can not continue!')
+                return -1
+            case 2:
+                stderr.println('warn: the plugins are not configured identically (check above). will continue but ' +
+                        'expect errors!')
+                break
+            default:
+                break
         }
 
         //
-        // Export the global plugin configurations
+        // Import the global plugin configurations
         // =======================================
         //
-        def plugins = [:]
-        for (plugin in jenkins.getPluginManager().getPlugins())
-        {
-            // Try to import the plugins configuration
-            def configuration = importPluginConfiguration(jenkins, plugin)
-            // Determine that success
-            def state
-            if (configuration == null)
-            {
-                state = RETURN_CODES.UNSUPPORTED
-            }
-            else
-            {
-                state = RETURN_CODES.SUCCESS
-            }
-            // Add the plugin to the import
-            plugins[plugin.getShortName()] = [
-                    "name"         : plugin.getShortName(),
-                    "displayName"  : plugin.getDisplayName(),
-                    "version"      : plugin.getVersion(),
-                    "status"       : state,
-                    "configuration": configuration
-            ]
-        }
-
 
         //
-        // Export the global node configuration
+        // Import the global node configuration
         // ====================================
         //
-        def global_node = importNodeConfiguration(jenkins, jenkins.getGlobalNodeProperties())
 
         //
-        // Export the node configurations
+        // Import the node configurations
         // ==============================
         //
-        def nodes = [:]
 
-        // The master node
-        nodes["master"] = importNodeConfiguration(jenkins, jenkins.getNodeProperties())
-
-        // Export all other nodes
-        for (node in jenkins.getNodes())
-        {
-            // Try to import the plugins configuration
-            nodes[node.getNodeName()] = importNodeConfiguration(jenkins, node.getNodeProperties())
-        }
-
-        // :TODO: Check where it ends
-        LOGGER.warning("WARNING!!!!!!!!!!")
-        def rc = [
-                'core': core,
-                'plugins': plugins,
-                'global_nodes': global_node,
-                'nodes': nodes
-        ]
-
-        // Now send the configuration back to the caller
-        stdout.println(JsonOutput.prettyPrint(JsonOutput.toJson(rc)))
+        // We are finished
         return 0
     }
 

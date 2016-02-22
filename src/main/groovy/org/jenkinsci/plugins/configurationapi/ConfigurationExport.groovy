@@ -125,11 +125,7 @@ public class ConfigurationExport extends CLICommand
         // Export the jenkins core configuration
         // =====================================
         //
-        def core = [:]
-        for (coreConfig in jenkins.getExtensionList(org.jenkinsci.plugins.configurationapi.core.ConfigurationStream))
-        {
-            core[coreConfig.getId()] = exportCoreConfiguration(jenkins)
-        }
+        Map core = exportCoreConfiguration(jenkins)
 
         //
         // Export the global plugin configurations
@@ -154,7 +150,9 @@ public class ConfigurationExport extends CLICommand
             plugins[plugin.getShortName()] = [
                     "name"         : plugin.getShortName(),
                     "displayName"  : plugin.getDisplayName(),
+                    "dependencies" : plugin.getDependencies().collectEntries {[(it.shortName): it.version]},
                     "version"      : plugin.getVersion(),
+                    "enabled"      : plugin.isEnabled(),
                     "status"       : state,
                     "configuration": configuration
             ]
