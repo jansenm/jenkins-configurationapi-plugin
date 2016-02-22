@@ -5,9 +5,9 @@ import jenkins.model.Jenkins
 
 interface CoreConfigurationStream extends ExtensionPoint
 {
-    public abstract String getId()
+    public String getId()
 
-    public abstract Map doExport(Jenkins instance)
+    public Map doExport(Jenkins instance)
 
-    public abstract void doImport(Jenkins instance, Map configuration)
+    public void doImport(Jenkins instance, Map configuration)
 }

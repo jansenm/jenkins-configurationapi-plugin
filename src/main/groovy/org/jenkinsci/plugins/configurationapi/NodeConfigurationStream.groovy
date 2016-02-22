@@ -1,15 +1,17 @@
 package org.jenkinsci.plugins.configurationapi
 
 import hudson.ExtensionPoint
-import hudson.model.Node
 import hudson.slaves.NodeProperty
+import hudson.slaves.NodePropertyDescriptor
+import hudson.util.DescribableList
 import jenkins.model.Jenkins
 
 interface NodeConfigurationStream extends ExtensionPoint
 {
-    public abstract String getNodePropertyClass()
+    public String getNodePropertyClass()
 
-    public abstract Map doExport(Jenkins instance, NodeProperty nodeProperty)
+    public Map doExport(Jenkins instance, NodeProperty nodeProperty)
 
-    public abstract void doImport(Jenkins instance, Node node, Map configuration)
+    public void doImport(Jenkins instance, DescribableList<NodeProperty<?>, NodePropertyDescriptor> node, Map
+            configuration)
 }

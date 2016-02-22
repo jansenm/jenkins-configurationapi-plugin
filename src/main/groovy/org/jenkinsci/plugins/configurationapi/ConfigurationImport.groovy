@@ -5,9 +5,6 @@ import hudson.Extension
 import hudson.PluginWrapper
 import hudson.cli.CLICommand
 import hudson.cli.util.ScriptLoader
-import hudson.slaves.NodeProperty
-import hudson.slaves.NodePropertyDescriptor
-import hudson.util.DescribableList
 import jenkins.model.Jenkins
 import org.apache.commons.io.IOUtils
 import org.kohsuke.args4j.Argument
@@ -77,40 +74,26 @@ public class ConfigurationImport extends CLICommand
         }
     }
 
-    private Map importNodeConfiguration(
-            Jenkins jenkins,
-            DescribableList<NodeProperty<Node>, NodePropertyDescriptor> properties)
+    private Map importNodeConfigurations(Jenkins jenkins, Map configuration)
     {
-
-        def rc = [:]
-        def extensions = jenkins.getExtensionList(NodeConfigurationStream)
-        for (nodeProperty in properties)
-        {
-            // Look for an extension that knows how to import the plugin
-            NodeConfigurationStream stream = extensions.find {
-                nodeProperty.getClass().getName() == it.getNodePropertyClass()
-            }
-            // Determine that success
-            def state
-            def configuration
-            if (stream == null)
+        def coreExtensions = jenkins.getExtensionList(NodeConfigurationStream)
+        configuration.each { String nodeName, nodeConfig ->
+            def nodeProperties
+            if (nodeName == 'master')
             {
-                stderr.println("Unsupported node propery ${nodeProperty.getClass().getName()} found!")
-                state = RETURN_CODES.UNSUPPORTED
-                configuration = null
+                nodeProperties = jenkins.getNodeProperties()
             }
             else
             {
-                state = RETURN_CODES.SUCCESS
-                configuration = stream.doExport(jenkins, nodeProperty)
+                nodeProperties = jenkins.getNode(nodeName).getNodeProperties()
             }
-            // Add the plugin to the import
-            rc["property:${nodeProperty.getClass()}"] = [
-                    "status"       : state,
-                    "configuration": configuration
-            ]
+            // :TODO: Setup a node if necessary
+            nodeConfig.each { nodePropertyName, nodePropertyConfig ->
+                // :TODO: error handling for no stream found
+                NodeConfigurationStream stream = coreExtensions.find { nodePropertyName == it.getNodePropertyClass() }
+                stream.doImport(jenkins, nodeProperties, nodePropertyConfig.configuration)
+            }
         }
-        return rc
     }
 
     private int setupPlugins(Jenkins jenkins, Map config)
@@ -244,6 +227,9 @@ public class ConfigurationImport extends CLICommand
         // Import the node configurations
         // ==============================
         //
+        importNodeConfigurations(jenkins, config['nodes'])
+
+        jenkins.save()
 
         // We are finished
         return 0

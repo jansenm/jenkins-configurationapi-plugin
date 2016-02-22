@@ -1,10 +1,11 @@
 package org.jenkinsci.plugins.configurationapi.node
 
 import hudson.Extension
-import hudson.model.Node
 import hudson.slaves.NodeProperty
+import hudson.slaves.NodePropertyDescriptor
 import hudson.tools.ToolDescriptor
 import hudson.tools.ToolLocationNodeProperty
+import hudson.util.DescribableList
 import jenkins.model.Jenkins
 import org.jenkinsci.plugins.configurationapi.NodeConfigurationStream
 
@@ -35,7 +36,8 @@ class ToolLocationStreamNode implements NodeConfigurationStream
     }
 
     @Override
-    void doImport(Jenkins jenkins, Node node, Map configuration)
+    void doImport(Jenkins jenkins, DescribableList<NodeProperty<?>, NodePropertyDescriptor> nodeProperties, Map
+            configuration)
     {
         def toolLocations = []
         configuration.each { tl ->
@@ -45,8 +47,8 @@ class ToolLocationStreamNode implements NodeConfigurationStream
                     (String)tl['home']
             )
         }
-        node.nodeProperties.clear()
-        node.nodeProperties.addAll(toolLocations)
+        nodeProperties.clear()
+        nodeProperties.addAll(toolLocations)
     }
 }
 

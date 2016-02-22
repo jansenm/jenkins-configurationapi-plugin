@@ -6,9 +6,9 @@ import jenkins.model.Jenkins
 
 interface PluginConfigurationStream extends ExtensionPoint
 {
-    public abstract String getPluginId()
+    public String getPluginId()
 
-    public abstract Map doExport(Jenkins instance, PluginWrapper plugin)
+    public Map doExport(Jenkins instance, PluginWrapper plugin)
 
-    public abstract void doImport(Jenkins instance, Map configuration)
+    public void doImport(Jenkins instance, Map configuration)
 }

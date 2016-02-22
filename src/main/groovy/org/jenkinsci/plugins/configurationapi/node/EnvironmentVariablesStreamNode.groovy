@@ -1,9 +1,10 @@
 package org.jenkinsci.plugins.configurationapi.node
 
 import hudson.Extension
-import hudson.model.Node
 import hudson.slaves.EnvironmentVariablesNodeProperty
 import hudson.slaves.NodeProperty
+import hudson.slaves.NodePropertyDescriptor
+import hudson.util.DescribableList
 import jenkins.model.Jenkins
 import org.jenkinsci.plugins.configurationapi.NodeConfigurationStream
 
@@ -29,12 +30,13 @@ class EnvironmentVariablesStreamNode implements NodeConfigurationStream
     }
 
     @Override
-    void doImport(Jenkins jenkins, Node node, Map configuration)
+    void doImport(Jenkins jenkins, DescribableList<NodeProperty<?>, NodePropertyDescriptor> nodeProperties, Map
+            configuration)
     {
-        EnvironmentVariablesNodeProperty nodeProperty = jenkins.getNodeProperties(EnvironmentVariablesNodeProperty)
+        EnvironmentVariablesNodeProperty nodeProperty = nodeProperties.get(EnvironmentVariablesNodeProperty)
         if (nodeProperty == null){
             nodeProperty = new EnvironmentVariablesNodeProperty()
-            Jenkins.instance.globalNodeProperties.add(nodeProperty)
+            nodeProperties.add(nodeProperty)
         }
         nodeProperty.envVars.clear()
         nodeProperty.envVars.putAll(configuration)

@@ -1,10 +1,10 @@
 package org.jenkinsci.plugins.configurationapi.node
 
 import hudson.Extension
-import hudson.model.Node
 import hudson.slaves.NodeProperty
+import hudson.slaves.NodePropertyDescriptor
+import hudson.util.DescribableList
 import jenkins.model.Jenkins
-import org.apache.commons.lang.NotImplementedException
 import org.jenkinsci.plugins.configurationapi.NodeConfigurationStream
 import org.jenkinsci.plugins.envinject.EnvInjectNodeProperty
 
@@ -12,9 +12,13 @@ import org.jenkinsci.plugins.envinject.EnvInjectNodeProperty
 class EnvInjectStreamNode implements NodeConfigurationStream
 {
     @Override
-    void doImport(Jenkins instance, Node node, Map configuration)
+    void doImport(Jenkins jenkins, DescribableList<NodeProperty<?>, NodePropertyDescriptor> nodeProperties, Map
+            configuration)
     {
-        throw new NotImplementedException()
+        EnvInjectNodeProperty envInject = new EnvInjectNodeProperty(
+                (boolean)configuration['unsetSystemVariables'],
+                (String) configuration['propertiesFilePath'])
+        nodeProperties.replace(envInject)
     }
 
     @Override

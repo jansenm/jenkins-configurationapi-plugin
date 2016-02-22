@@ -85,7 +85,7 @@ public class ConfigurationExport extends CLICommand
                 configuration = stream.doExport(jenkins, nodeProperty)
             }
             // Add the plugin to the export
-            rc["property:${nodeProperty.getClass()}"] = [
+            rc["${nodeProperty.getClass().getName()}"] = [
                     "status"       : state,
                     "configuration": configuration
             ]
