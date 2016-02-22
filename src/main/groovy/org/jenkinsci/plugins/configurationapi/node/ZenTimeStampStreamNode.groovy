@@ -5,6 +5,7 @@ import hudson.model.Node
 import hudson.plugins.zentimestamp.ZenTimestampNodeProperty
 import hudson.slaves.NodeProperty
 import jenkins.model.Jenkins
+import org.jenkinsci.plugins.configurationapi.NodeConfigurationStream
 
 @Extension
 class ZenTimeStampStreamNode implements NodeConfigurationStream

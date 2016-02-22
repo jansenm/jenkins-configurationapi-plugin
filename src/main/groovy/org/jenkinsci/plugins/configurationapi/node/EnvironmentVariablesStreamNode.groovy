@@ -5,6 +5,7 @@ import hudson.model.Node
 import hudson.slaves.EnvironmentVariablesNodeProperty
 import hudson.slaves.NodeProperty
 import jenkins.model.Jenkins
+import org.jenkinsci.plugins.configurationapi.NodeConfigurationStream
 
 @Extension
 class EnvironmentVariablesStreamNode implements NodeConfigurationStream

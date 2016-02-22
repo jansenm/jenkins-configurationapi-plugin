@@ -3,6 +3,7 @@ package org.jenkinsci.plugins.configurationapi.plugin
 import hudson.Extension
 import hudson.PluginWrapper
 import jenkins.model.Jenkins
+import org.jenkinsci.plugins.configurationapi.PluginConfigurationStream
 
 @Extension
 class ZenTimeStamp implements PluginConfigurationStream

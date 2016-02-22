@@ -3,6 +3,7 @@ package org.jenkinsci.plugins.configurationapi.core
 import hudson.Extension
 import jenkins.model.Jenkins
 import jenkins.model.JenkinsLocationConfiguration
+import org.jenkinsci.plugins.configurationapi.CoreConfigurationStream
 
 @Extension
 class LocationCoreConfiguration implements CoreConfigurationStream

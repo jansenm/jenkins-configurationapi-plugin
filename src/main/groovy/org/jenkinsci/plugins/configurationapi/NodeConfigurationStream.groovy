@@ -1,4 +1,4 @@
-package org.jenkinsci.plugins.configurationapi.node
+package org.jenkinsci.plugins.configurationapi
 
 import hudson.ExtensionPoint
 import hudson.model.Node

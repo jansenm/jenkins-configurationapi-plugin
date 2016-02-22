@@ -1,4 +1,4 @@
-package org.jenkinsci.plugins.configurationapi.plugin
+package org.jenkinsci.plugins.configurationapi
 
 import hudson.ExtensionPoint
 import hudson.PluginWrapper

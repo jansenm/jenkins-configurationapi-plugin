@@ -6,6 +6,7 @@ import hudson.slaves.NodeProperty
 import hudson.tools.ToolDescriptor
 import hudson.tools.ToolLocationNodeProperty
 import jenkins.model.Jenkins
+import org.jenkinsci.plugins.configurationapi.NodeConfigurationStream
 
 @Extension
 class ToolLocationStreamNode implements NodeConfigurationStream

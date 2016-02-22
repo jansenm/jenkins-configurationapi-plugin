@@ -5,6 +5,7 @@ import hudson.model.Node
 import hudson.slaves.NodeProperty
 import jenkins.model.Jenkins
 import org.apache.commons.lang.NotImplementedException
+import org.jenkinsci.plugins.configurationapi.NodeConfigurationStream
 import org.jenkinsci.plugins.envinject.EnvInjectNodeProperty
 
 @Extension

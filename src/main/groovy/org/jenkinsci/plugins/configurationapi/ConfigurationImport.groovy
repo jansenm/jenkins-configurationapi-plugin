@@ -10,9 +10,6 @@ import hudson.slaves.NodePropertyDescriptor
 import hudson.util.DescribableList
 import jenkins.model.Jenkins
 import org.apache.commons.io.IOUtils
-import org.jenkinsci.plugins.configurationapi.core.CoreConfigurationStream
-import org.jenkinsci.plugins.configurationapi.node.NodeConfigurationStream
-import org.jenkinsci.plugins.configurationapi.plugin.PluginConfigurationStream
 import org.kohsuke.args4j.Argument
 import org.kohsuke.args4j.CmdLineException
 
