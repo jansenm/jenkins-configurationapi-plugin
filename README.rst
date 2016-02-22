@@ -90,6 +90,10 @@ ExtensionPoints Design
 Perhaps its better to make the plugin/core extension points a combination out of global/node based configuration. This
 could simplify the implementation.
 
+Permissions needed
+------------------
+The plugin is not yet guarded by permissions. Jenkins.ADMINISTER should be enough.
+
 
 .. _ExtensionPoints: http://javadoc.jenkins-ci.org/hudson/ExtensionPoint.html
 .. _core.ConfigurationStream: src/main/groovy/org/jenkinsci/plugins/configurationapi/core/ConfigurationStream.groovy
