@@ -2,12 +2,12 @@ package org.jenkinsci.plugins.configurationapi.plugin
 
 import hudson.Extension
 import hudson.PluginWrapper
-import hudson.tasks.Mailer
+import hudson.tasks.Mailer.DescriptorImpl
 import jenkins.model.Jenkins
 import org.jenkinsci.plugins.configurationapi.PluginConfigurationStream
 
 @Extension
-class MailerStreamPlugin implements PluginConfigurationStream
+class Mailer implements PluginConfigurationStream
 {
 
     @Override
@@ -20,7 +20,7 @@ class MailerStreamPlugin implements PluginConfigurationStream
     Map doExport(Jenkins instance, PluginWrapper plugin)
     {
         def rc = [:]
-        Mailer.DescriptorImpl htm = (Mailer.DescriptorImpl) instance.getDescriptor('hudson.tasks.Mailer')
+        DescriptorImpl htm = (DescriptorImpl) instance.getDescriptor('hudson.tasks.Mailer')
         if (htm == null) {
             return rc
         }
@@ -38,11 +38,9 @@ class MailerStreamPlugin implements PluginConfigurationStream
     @Override
     void doImport(Jenkins instance, Map configuration)
     {
-        println("here")
-        Mailer.DescriptorImpl htm = (Mailer.DescriptorImpl) instance.getDescriptor('hudson.tasks.Mailer')
-        assert htm
+        DescriptorImpl htm = (DescriptorImpl) instance.getDescriptor('hudson.tasks.Mailer')
         htm.setSmtpHost((String)configuration['smtpHost'])
-        htm.setSmtpPort(((Integer)configuration['smtpPort']).toString())
+        htm.setSmtpPort((String)configuration['smtpPort'])
         htm.setSmtpAuth((String)configuration['smtpAuthUsername'], (String)configuration['smtpAuthPassword'])
         htm.setUseSsl((boolean)configuration['smtpUseSSL'])
         htm.setReplyToAddress((String)configuration['replyToAddress'])
