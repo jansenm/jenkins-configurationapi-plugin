@@ -1,4 +1,4 @@
-package org.jenkinsci.plugins.configurationapi.node
+package org.jenkinsci.plugins.configurationapi.core
 
 import hudson.Extension
 import hudson.slaves.EnvironmentVariablesNodeProperty
@@ -9,7 +9,7 @@ import jenkins.model.Jenkins
 import org.jenkinsci.plugins.configurationapi.NodeConfigurationStream
 
 @Extension
-class EnvironmentVariablesStreamNode implements NodeConfigurationStream
+class EnvironmentVariablesConfiguration implements NodeConfigurationStream
 {
 
     @Override
@@ -34,7 +34,7 @@ class EnvironmentVariablesStreamNode implements NodeConfigurationStream
             configuration)
     {
         EnvironmentVariablesNodeProperty nodeProperty = nodeProperties.get(EnvironmentVariablesNodeProperty)
-        if (nodeProperty == null){
+        if (nodeProperty == null) {
             nodeProperty = new EnvironmentVariablesNodeProperty()
             nodeProperties.add(nodeProperty)
         }
