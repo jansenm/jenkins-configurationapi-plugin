@@ -5,7 +5,8 @@ import hudson.slaves.EnvironmentVariablesNodeProperty
 import hudson.slaves.NodeProperty
 import hudson.slaves.NodePropertyDescriptor
 import hudson.util.DescribableList
-import jenkins.model.Jenkins
+import org.jenkinsci.plugins.configurationapi.ConfigurationExport
+import org.jenkinsci.plugins.configurationapi.ConfigurationImport
 import org.jenkinsci.plugins.configurationapi.NodeConfigurationStream
 
 @Extension
@@ -19,7 +20,7 @@ class EnvironmentVariablesConfiguration implements NodeConfigurationStream
     }
 
     @Override
-    Map doExport(Jenkins jenkins, NodeProperty property)
+    Map doExport(ConfigurationExport.Context context, NodeProperty property)
     {
         def envVars = (EnvironmentVariablesNodeProperty) property
         def rc = [:]
@@ -30,7 +31,7 @@ class EnvironmentVariablesConfiguration implements NodeConfigurationStream
     }
 
     @Override
-    void doImport(Jenkins jenkins, DescribableList<NodeProperty<?>, NodePropertyDescriptor> nodeProperties, Map
+    void doImport(ConfigurationImport.Context context, DescribableList<NodeProperty<?>, NodePropertyDescriptor> nodeProperties, Map
             configuration)
     {
         EnvironmentVariablesNodeProperty nodeProperty = nodeProperties.get(EnvironmentVariablesNodeProperty)

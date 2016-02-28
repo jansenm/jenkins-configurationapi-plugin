@@ -2,11 +2,11 @@ package org.jenkinsci.plugins.configurationapi
 
 import groovy.json.JsonSlurper
 import hudson.Extension
-import hudson.PluginWrapper
-import hudson.cli.CLICommand
 import hudson.cli.util.ScriptLoader
 import hudson.slaves.NodeProperty
 import hudson.slaves.NodePropertyDescriptor
+import hudson.tools.ToolInstaller
+import hudson.tools.ToolProperty
 import hudson.util.DescribableList
 import jenkins.model.Jenkins
 import org.apache.commons.io.IOUtils
@@ -16,8 +16,25 @@ import org.kohsuke.args4j.CmdLineException
 import java.util.logging.Logger
 
 @Extension
-public class ConfigurationImport extends CLICommand
+public class ConfigurationImport extends ConfigurationBase
 {
+    public static class Context extends ConfigurationBase.Context
+    {
+
+        public Context(Jenkins jenkins, ConfigurationImport importer)
+        {
+            super(jenkins)
+            this.importer = importer
+        }
+
+        public ConfigurationImport getImporter()
+        {
+            return this.importer
+        }
+
+        private ConfigurationImport importer
+    }
+
     @Argument(
             usage = "Script to be executed. File, URL or '=' to represent stdin.",
             metaVar = "SCRIPT",
@@ -52,63 +69,58 @@ public class ConfigurationImport extends CLICommand
         return "todo"
     }
 
-    public enum RETURN_CODES
+    private void importCoreConfiguration(Context context, Map config)
     {
-        UNSUPPORTED('unsupported', 'support for plugin not implemented'),
-        SUCCESS('success', 'plugin successfully handled')
-
-        final String id
-        final String description
-
-        RETURN_CODES(String id, String description)
-        {
-            this.id = id
-            this.description = description
-        }
-    }
-
-    private void importCoreConfiguration(Jenkins jenkins, Map config)
-    {
-        def coreExtensions = jenkins.getExtensionList(CoreConfigurationStream)
+        def coreExtensions = context.getJenkins().getExtensionList(CoreConfigurationStream)
         for (entry in config)
         {
             CoreConfigurationStream stream = coreExtensions.find { entry.key == it.getId() }
-            stream.doImport(jenkins, entry.value)
+            if (stream == null)
+            {
+                stderr.println("Unsupported global configuration ${entry.key} found!")
+                continue
+            }
+            stream.doImport(context, (Map) entry.value)
         }
     }
 
     private Map importNodeConfiguration(
-            Jenkins jenkins,
+            Context context,
             DescribableList<NodeProperty<?>, NodePropertyDescriptor> nodeProperties,
             Map configuration)
     {
-        def coreExtensions = jenkins.getExtensionList(NodeConfigurationStream)
+        def coreExtensions = context.getJenkins().getExtensionList(NodeConfigurationStream)
         // :TODO: Setup a node if necessary
         configuration.each { nodePropertyName, nodePropertyConfig ->
             // :TODO: error handling for no stream found
             NodeConfigurationStream stream = coreExtensions.find { nodePropertyName == it.getNodePropertyClass() }
-            stream.doImport(jenkins, nodeProperties, nodePropertyConfig.configuration)
+            if (stream == null)
+            {
+                stderr.println("Unsupported node configuration ${nodePropertyName} found!")
+                return
+            }
+            stream.doImport(context, nodeProperties, (Map) nodePropertyConfig.configuration)
         }
     }
 
-    private Map importNodeConfigurations(Jenkins jenkins, Map configuration)
+    private Map importNodeConfigurations(Context context, Map configuration)
     {
         configuration.each { String nodeName, Map nodeConfig ->
             def nodeProperties
             if (nodeName == 'master')
             {
-                nodeProperties = jenkins.getNodeProperties()
+                nodeProperties = context.getJenkins().getNodeProperties()
             }
             else
             {
-                nodeProperties = jenkins.getNode(nodeName).getNodeProperties()
+                nodeProperties = context.getJenkins().getNode(nodeName).getNodeProperties()
             }
             // :TODO: Setup a node if necessary
-            importNodeConfiguration(jenkins, nodeProperties, nodeConfig)
+            importNodeConfiguration(context, nodeProperties, nodeConfig)
         }
     }
 
-    private int setupPlugins(Jenkins jenkins, Map config)
+    private int setupPlugins(Context context, Map config)
     {
         // Initially i though i could download and install the exact same set of plugins as given in the
         // configuration. This apparently is not THAT easy given jenkins by default does not have a method to install
@@ -122,7 +134,7 @@ public class ConfigurationImport extends CLICommand
         //      For me the solution is simple. I use my ansible playbook which can install a set of plugins in a
         //      fixed version. So for now just verify the plugins and give feedback
         //
-        def pluginManager = jenkins.getPluginManager()
+        def pluginManager = context.getJenkins().getPluginManager()
         def final IDENTICAL = 1
         def final VERSION_MISMATCH = 2
         def final PLUGINS_MISSING = 3
@@ -170,9 +182,9 @@ public class ConfigurationImport extends CLICommand
         return rc
     }
 
-    private Map importPluginConfigurations(Jenkins jenkins, Map configuration)
+    private Map importPluginConfigurations(Context context, Map configuration)
     {
-        def extensionList = jenkins.getExtensionList(PluginConfigurationStream)
+        def extensionList = context.getJenkins().getExtensionList(PluginConfigurationStream)
 
         configuration.each { String pluginId, Map pluginConfig ->
 
@@ -184,16 +196,74 @@ public class ConfigurationImport extends CLICommand
                 return
             }
 
-            stream.doImport(jenkins, (Map)pluginConfig['configuration'])
+            stream.doImport(context, (Map) pluginConfig['configuration'])
         }
+    }
+
+    private void importToolInstallations(Context context, Map configuration)
+    {
+        def extensionList = context.getJenkins().getExtensionList(ToolInstallationConfigurationStream)
+
+        configuration.each { String className, Map toolInstallationConfig ->
+            stderr.println(className)
+
+            // Look for an extension that knows how to export the plugin
+            def stream = extensionList.find { className == it.getToolInstallationClass() }
+            if (stream == null)
+            {
+                stderr.println("Unsupported tool installation ${className} found!")
+                return
+            }
+
+            stream.doImport(context, (Map) toolInstallationConfig.configuration)
+        }
+    }
+
+    public List<? extends ToolProperty<?>> importToolProperties(Context context, List properties)
+    {
+        def extensionList = context.getJenkins().getExtensionList(ToolPropertyConfigurationStream)
+        def toolProperties = []
+
+        properties.each { Map toolPropertyConfig ->
+
+            // Look for an extension that knows how to export the plugin
+            def stream = extensionList.find { toolPropertyConfig.className == it.getToolPropertyClass() }
+            if (stream == null)
+            {
+                stderr.println("Unsupported tool property ${className} found!")
+                return
+            }
+
+            toolProperties.add(stream.doImport(context, (Map) toolPropertyConfig.configuration))
+        }
+
+        return toolProperties
+    }
+
+    ToolInstaller importToolInstaller(Context context, Map configuration)
+    {
+        def extensions = context.getJenkins().getExtensionList(ToolInstallerConfigurationStream)
+
+        // Look for an extension that knows how to export the plugin
+        def stream = extensions.find { ToolInstallerConfigurationStream it ->
+            configuration.className == it.getToolInstallerClass()
+        }
+
+        if (stream == null)
+        {
+            stderr.println("Unsupported tool installer ${configuration.className} found!")
+            return
+        }
+
+        return stream.doImport(context, (Map)configuration.configuration)
     }
 
     @Override
     protected int run() throws Exception
     {
-        final Jenkins jenkins = Jenkins.getInstance()
+        def context = new Context(Jenkins.getInstance(), this)
 
-        if (jenkins == null)
+        if (context.getJenkins() == null)
         {
             stderr.println("The Jenkins instance has not been started, or was already shut down!");
             return -1;
@@ -209,13 +279,13 @@ public class ConfigurationImport extends CLICommand
         // Import the jenkins core configuration
         // =====================================
         //
-        importCoreConfiguration(jenkins, (Map)config['core'])
+        importCoreConfiguration(context, (Map) config['core'])
 
         //
         // Setup the plugins
         // =================
         //
-        def rc = setupPlugins(jenkins, (Map)config['plugins'])
+        def rc = setupPlugins(context, (Map) config['plugins'])
         switch (rc)
         {
             case 3:
@@ -233,21 +303,27 @@ public class ConfigurationImport extends CLICommand
         // Import the global plugin configurations
         // =======================================
         //
-        importPluginConfigurations(jenkins, (Map)config['plugins'])
+        importPluginConfigurations(context, (Map) config['plugins'])
 
         //
         // Import the global node configuration
         // ====================================
         //
-        importNodeConfiguration(jenkins, jenkins.getGlobalNodeProperties(), (Map)config['global_nodes'])
+        importNodeConfiguration(context, context.getJenkins().getGlobalNodeProperties(), (Map) config['global_nodes'])
+
+        //
+        // Export tool installations
+        // ====================================
+        //
+        importToolInstallations(context, (Map) config['toolInstallations'])
 
         //
         // Import the node configurations
         // ==============================
         //
-        importNodeConfigurations(jenkins, (Map) config['nodes'])
+        importNodeConfigurations(context, (Map) config['nodes'])
 
-        jenkins.save()
+        context.getJenkins().save()
 
         // We are finished
         return 0

@@ -2,13 +2,12 @@ package org.jenkinsci.plugins.configurationapi
 
 import hudson.ExtensionPoint
 import hudson.PluginWrapper
-import jenkins.model.Jenkins
 
 interface PluginConfigurationStream extends ExtensionPoint
 {
     public String getPluginId()
 
-    public Map doExport(Jenkins instance, PluginWrapper plugin)
+    public Map doExport(ConfigurationExport.Context context, PluginWrapper plugin)
 
-    public void doImport(Jenkins instance, Map configuration)
+    public void doImport(ConfigurationImport.Context context, Map configuration)
 }

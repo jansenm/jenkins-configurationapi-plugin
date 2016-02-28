@@ -3,7 +3,8 @@ package org.jenkinsci.plugins.configurationapi.plugin
 import hudson.Extension
 import hudson.PluginWrapper
 import hudson.tasks.Mailer.DescriptorImpl
-import jenkins.model.Jenkins
+import org.jenkinsci.plugins.configurationapi.ConfigurationExport
+import org.jenkinsci.plugins.configurationapi.ConfigurationImport
 import org.jenkinsci.plugins.configurationapi.PluginConfigurationStream
 
 @Extension
@@ -17,10 +18,10 @@ class Mailer implements PluginConfigurationStream
     }
 
     @Override
-    Map doExport(Jenkins instance, PluginWrapper plugin)
+    Map doExport(ConfigurationExport.Context context, PluginWrapper plugin)
     {
         def rc = [:]
-        DescriptorImpl htm = (DescriptorImpl) instance.getDescriptor('hudson.tasks.Mailer')
+        DescriptorImpl htm = (DescriptorImpl) context.getJenkins().getDescriptor('hudson.tasks.Mailer')
         if (htm == null) {
             return rc
         }
@@ -36,9 +37,9 @@ class Mailer implements PluginConfigurationStream
     }
 
     @Override
-    void doImport(Jenkins instance, Map configuration)
+    void doImport(ConfigurationImport.Context context, Map configuration)
     {
-        DescriptorImpl htm = (DescriptorImpl) instance.getDescriptor('hudson.tasks.Mailer')
+        DescriptorImpl htm = (DescriptorImpl) context.getJenkins().getDescriptor('hudson.tasks.Mailer')
         htm.setSmtpHost((String)configuration['smtpHost'])
         htm.setSmtpPort((String)configuration['smtpPort'])
         htm.setSmtpAuth((String)configuration['smtpAuthUsername'], (String)configuration['smtpAuthPassword'])

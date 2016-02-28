@@ -6,7 +6,8 @@ import hudson.plugins.zentimestamp.ZenTimestampNodeProperty
 import hudson.slaves.NodeProperty
 import hudson.slaves.NodePropertyDescriptor
 import hudson.util.DescribableList
-import jenkins.model.Jenkins
+import org.jenkinsci.plugins.configurationapi.ConfigurationExport
+import org.jenkinsci.plugins.configurationapi.ConfigurationImport
 import org.jenkinsci.plugins.configurationapi.NodeConfigurationStream
 import org.jenkinsci.plugins.configurationapi.PluginConfigurationStream
 
@@ -22,14 +23,14 @@ class ZenTimeStamp implements PluginConfigurationStream, NodeConfigurationStream
     }
 
     @Override
-    Map doExport(Jenkins instance, PluginWrapper plugin)
+    Map doExport(ConfigurationExport.Context context, PluginWrapper plugin)
     {
         // This plugin has no global configuration. Only node configurations.
         return [:]
     }
 
     @Override
-    void doImport(Jenkins instance, Map configuration)
+    void doImport(ConfigurationImport.Context context, Map configuration)
     {
         // Nothing to do
     }
@@ -43,7 +44,7 @@ class ZenTimeStamp implements PluginConfigurationStream, NodeConfigurationStream
     }
 
     @Override
-    Map doExport(Jenkins instance, NodeProperty nodeProperty)
+    Map doExport(ConfigurationExport.Context context, NodeProperty nodeProperty)
     {
         ZenTimestampNodeProperty timestamp = (ZenTimestampNodeProperty) nodeProperty
         return [
@@ -52,7 +53,7 @@ class ZenTimeStamp implements PluginConfigurationStream, NodeConfigurationStream
     }
 
     @Override
-    void doImport(Jenkins instance, DescribableList<NodeProperty<?>, NodePropertyDescriptor> nodeProperties, Map
+    void doImport(ConfigurationImport.Context context, DescribableList<NodeProperty<?>, NodePropertyDescriptor> nodeProperties, Map
             configuration)
     {
         ZenTimestampNodeProperty timestamp = new ZenTimestampNodeProperty(configuration['pattern'])

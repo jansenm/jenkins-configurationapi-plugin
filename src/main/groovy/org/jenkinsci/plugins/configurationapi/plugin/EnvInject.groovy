@@ -6,7 +6,9 @@ import hudson.slaves.NodeProperty
 import hudson.slaves.NodePropertyDescriptor
 import hudson.util.DescribableList
 import jenkins.model.GlobalConfiguration
-import jenkins.model.Jenkins
+import org.jenkinsci.plugins.configurationapi.ConfigurationExport
+import org.jenkinsci.plugins.configurationapi.ConfigurationImport
+
 import org.jenkinsci.plugins.configurationapi.NodeConfigurationStream
 import org.jenkinsci.plugins.configurationapi.PluginConfigurationStream
 import org.jenkinsci.plugins.envinject.EnvInjectNodeProperty
@@ -20,7 +22,7 @@ class EnvInject implements NodeConfigurationStream, PluginConfigurationStream
      */
 
     @Override
-    void doImport(Jenkins jenkins, DescribableList<NodeProperty<?>, NodePropertyDescriptor> nodeProperties, Map
+    void doImport(ConfigurationImport.Context context, DescribableList<NodeProperty<?>, NodePropertyDescriptor> nodeProperties, Map
             configuration)
     {
         EnvInjectNodeProperty envInject = new EnvInjectNodeProperty(
@@ -30,7 +32,7 @@ class EnvInject implements NodeConfigurationStream, PluginConfigurationStream
     }
 
     @Override
-    Map doExport(Jenkins instance, NodeProperty nodeProperty)
+    Map doExport(ConfigurationExport.Context context, NodeProperty nodeProperty)
     {
         EnvInjectNodeProperty property = (EnvInjectNodeProperty) nodeProperty
         return [
@@ -56,7 +58,7 @@ class EnvInject implements NodeConfigurationStream, PluginConfigurationStream
     }
 
     @Override
-    Map doExport(Jenkins jenkins, PluginWrapper plugin)
+    Map doExport(ConfigurationExport.Context context, PluginWrapper plugin)
     {
         EnvInjectPluginConfiguration config = EnvInjectPluginConfiguration.getInstance()
         return [
@@ -66,7 +68,7 @@ class EnvInject implements NodeConfigurationStream, PluginConfigurationStream
     }
 
     @Override
-    void doImport(Jenkins jenkins, Map configuration)
+    void doImport(ConfigurationImport.Context context, Map configuration)
     {
         GlobalConfiguration.all().remove(EnvInjectPluginConfiguration.getInstance())
         // But how to activate it?

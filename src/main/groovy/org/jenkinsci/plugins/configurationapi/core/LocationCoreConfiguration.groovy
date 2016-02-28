@@ -1,15 +1,16 @@
 package org.jenkinsci.plugins.configurationapi.core
 
 import hudson.Extension
-import jenkins.model.Jenkins
 import jenkins.model.JenkinsLocationConfiguration
+import org.jenkinsci.plugins.configurationapi.ConfigurationExport
+import org.jenkinsci.plugins.configurationapi.ConfigurationImport
 import org.jenkinsci.plugins.configurationapi.CoreConfigurationStream
 
 @Extension
 class LocationCoreConfiguration implements CoreConfigurationStream
 {
     @Override
-    void doImport(Jenkins instance, Map configuration)
+    void doImport(ConfigurationImport.Context context, Map configuration)
     {
         def locationConfig = JenkinsLocationConfiguration.get()
         locationConfig.setAdminAddress((String)configuration['adminAddress'])
@@ -17,7 +18,7 @@ class LocationCoreConfiguration implements CoreConfigurationStream
     }
 
     @Override
-    Map doExport(Jenkins instance)
+    Map doExport(ConfigurationExport.Context context)
     {
         def locationConfig = JenkinsLocationConfiguration.get()
         return [
